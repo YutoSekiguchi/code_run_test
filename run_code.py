@@ -27,12 +27,14 @@ COMPILED_LANGUAGES = {
     }
 }
 
+
 def run_command(cmd, env=None, cwd=None):
     result = subprocess.run(cmd, text=True, capture_output=True, env=env, cwd=cwd)
     print(result.stdout, end='')
     if result.stderr:
         print(result.stderr, file=sys.stderr)
     return result.returncode
+
 
 def install_dependencies(ext, deps, depdir):
     env = {}
@@ -68,9 +70,11 @@ def run_script(path, deps=None):
     ext = os.path.splitext(path)[1]
     with tempfile.TemporaryDirectory() as depdir:
         env = os.environ.copy()
+
         if ext == '.py':
             stub = os.path.join(os.path.dirname(__file__), 'libs', 'pandas_stub')
             env['PYTHONPATH'] = os.pathsep.join(filter(None, [stub, env.get('PYTHONPATH', '')]))
+
         env.update(install_dependencies(ext, deps, depdir))
 
         if ext in LANG_RUNNERS:
@@ -103,6 +107,7 @@ def main():
 
     try:
         rc = run_script(args.source, args.deps)
+
         sys.exit(rc)
     except ValueError as exc:
         print(exc)

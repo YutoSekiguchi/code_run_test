@@ -15,6 +15,7 @@ const LANGUAGE_EXT = {
   java: '.java'
 };
 
+
 function runCode(lang, code, deps = '') {
   const ext = LANGUAGE_EXT[lang];
   if (!ext) {
@@ -23,6 +24,7 @@ function runCode(lang, code, deps = '') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'code-'));
   const file = path.join(dir, 'prog' + ext);
   fs.writeFileSync(file, code);
+
   const args = ['run_code.py', file];
   const depList = deps.trim().split(/\s+/).filter(d => d);
   if (depList.length > 0) {
@@ -40,8 +42,12 @@ function handleRequest(req, res) {
       const params = new URLSearchParams(body);
       const lang = params.get('language');
       const code = params.get('code') || '';
+
       const deps = params.get('deps') || '';
       const output = runCode(lang, code, deps);
+
+
+
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end(output);
     });
@@ -56,7 +62,9 @@ function handleRequest(req, res) {
 ${options}
 </select><br>
 <textarea name="code" rows="10" cols="40"></textarea><br>
+
 <input type="text" name="deps" placeholder="Dependencies (space separated)"><br>
+
 <input type="submit" value="Run">
 </form>`;
     res.writeHead(200, { 'Content-Type': 'text/html' });
