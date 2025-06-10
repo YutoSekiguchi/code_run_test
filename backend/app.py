@@ -1,0 +1,82 @@
+import os
+import tempfile
+import subprocess
+from fastapi import FastAPI, Form
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import PlainTextResponse
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+LANGUAGE_EXT = {
+    'python': '.py',
+    'javascript': '.js',
+    'ruby': '.rb',
+    'php': '.php',
+    'perl': '.pl',
+    'c': '.c',
+    'cpp': '.cpp',
+    'java': '.java'
+}
+
+
+def run_code(lang, code, deps=''):
+    ext = LANGUAGE_EXT.get(lang)
+    if not ext:
+        return f'Unsupported language: {lang}'
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = os.path.join(tmpdir, 'prog' + ext)
+        with open(path, 'w') as f:
+            f.write(code)
+        run_code_path = os.path.join(os.path.dirname(__file__), 'run_code.py')
+        import sys
+        args = [sys.executable, run_code_path, path]
+        dep_list = deps.strip().split()
+        if dep_list:
+            args += ['--deps'] + dep_list
+        
+        logging.debug(f"args={args}")
+        logging.debug(f"code={code}")
+        result = subprocess.run(args, text=True, capture_output=True)
+        logging.debug(f"returncode={result.returncode}")
+        logging.debug(f"stdout={result.stdout}")
+        logging.debug(f"stderr={result.stderr}")
+        return result.stdout + result.stderr
+
+
+@app.get("/")
+async def root():
+    return PlainTextResponse("Code Runner API - Use POST to run code")
+
+
+@app.post("/")
+async def run_code_endpoint(
+    language: str = Form(...),
+    code: str = Form(...),
+    deps: str = Form(default="")
+):
+    output = run_code(language, code, deps)
+    return PlainTextResponse(output)
+
+
+@app.post("/run")
+async def run_code_endpoint_alt(
+    language: str = Form(...),
+    code: str = Form(...),
+    deps: str = Form(default="")
+):
+    output = run_code(language, code, deps)
+    return PlainTextResponse(output)
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get('PORT', '8000'))
+    uvicorn.run(app, host="0.0.0.0", port=port)
