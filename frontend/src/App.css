@@ -1,91 +1,256 @@
+/* Modern light theme design */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
+
 .app {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
+  min-height: 100vh;
 }
 
 .app h1 {
   text-align: center;
-  margin-bottom: 2rem;
+  font-size: 3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 3rem;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.main-container {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.left-panel, .right-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
 }
 
 .controls {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .controls label {
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+  display: block;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
 }
 
 .controls select {
-  margin-left: 0.5rem;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+.controls select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .editor {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.editor label {
+  display: block;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.8rem;
+  font-size: 1.1rem;
 }
 
 .editor textarea {
   width: 100%;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  padding: 1.5rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
   font-size: 14px;
+  line-height: 1.6;
   resize: vertical;
+  background: #fafafa;
+  transition: all 0.3s ease;
+  min-height: 300px;
+}
+
+.editor textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: white;
+}
+
+.editor textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
 }
 
 .run-section {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .run-button {
-  background-color: #007bff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
+  padding: 1rem 3rem;
+  border-radius: 50px;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 160px;
 }
 
 .run-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.run-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .run-button:disabled {
-  background-color: #6c757d;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 15px rgba(156, 163, 175, 0.2);
 }
 
 .output {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 1rem;
-  background-color: #f8f9fa;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
 }
 
 .output h3 {
-  margin-top: 0;
-  margin-bottom: 1rem;
+  margin: 0;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #000000;
+  font-size: 1.1rem;
 }
 
 .output-content {
-  background-color: #2d3748;
-  color: #e2e8f0;
-  padding: 1rem;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1.5rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Monaco', 'Cascadia Code', monospace;
   font-size: 14px;
+  line-height: 1.6;
   white-space: pre-wrap;
   overflow-x: auto;
-  min-height: 100px;
+  min-height: 300px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.output-content:empty::before {
+  content: "Output will appear here...";
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Loading animation */
+.run-button:disabled::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .app {
+    padding: 1rem;
+  }
+  
+  .app h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .left-panel, .right-panel {
+    padding: 1.5rem;
+  }
+}
+
+/* Smooth transitions */
+* {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+/* Custom scrollbar */
+.output-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.output-content::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.output-content::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 4px;
+}
+
+.output-content::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
