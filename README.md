@@ -27,6 +27,8 @@ python run_code.py samples/hello.py
 
 The repository includes a `samples` directory with small example programs for each supported language.
 
+`samples/use_pandas.py` shows the built-in pandas stub in action.
+
 
 ### Installing dependencies
 
@@ -37,6 +39,13 @@ python run_code.py samples/use_local.py --deps libs/localpkg
 ```
 
 The runner installs Python packages with `pip` and JavaScript packages with `npm` into a temporary directory and adjusts environment variables so the executed program can import them.
+
+
+### Built-in packages
+
+The runner exposes a very small stub of the `pandas` library without needing to
+install it.  Programs can `import pandas as pd` straight away.  C programs are
+compiled with the math library (`-lm`) linked by default.
 
 
 ## Web interface

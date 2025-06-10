@@ -17,7 +17,6 @@ def test_python_sample():
     assert out == 'Hello from Python'
 
 
-
 def run_node(lang, code, deps=''):
     import json
     script = (
@@ -39,6 +38,12 @@ def test_python_with_dep():
     out, rc = run_sample('samples/use_local.py', ['libs/localpkg'])
     assert rc == 0
     assert out == '42'
+
+
+def test_pandas_stub():
+    out, rc = run_sample('samples/use_pandas.py')
+    assert rc == 0
+    assert out == '3'
 
 
 def test_node_with_dep():
