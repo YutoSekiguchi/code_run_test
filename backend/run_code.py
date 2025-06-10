@@ -5,7 +5,7 @@ import tempfile
 import argparse
 
 LANG_RUNNERS = {
-    '.py': ['python3'],
+    '.py': ['python'],
     '.js': ['node'],
     '.rb': ['ruby'],
     '.php': ['php'],
