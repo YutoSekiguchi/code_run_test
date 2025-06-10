@@ -1,34 +1,94 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
 
+const LANGUAGES = {
+  python: 'Python',
+  javascript: 'JavaScript',
+  ruby: 'Ruby',
+  php: 'PHP',
+  perl: 'Perl',
+  c: 'C',
+  cpp: 'C++',
+  java: 'Java'
+} as const
+
+type Language = keyof typeof LANGUAGES
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [language, setLanguage] = useState<Language>('python')
+  const [code, setCode] = useState('')
+  const [output, setOutput] = useState('')
+  const [isRunning, setIsRunning] = useState(false)
+
+  const runCode = async () => {
+    setIsRunning(true)
+    setOutput('')
+    
+    try {
+      const response = await fetch('http://localhost:8000/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          language,
+          code,
+          deps: ''
+        })
+      })
+      
+      const result = await response.text()
+      setOutput(result)
+    } catch (error) {
+      setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsRunning(false)
+    }
+  }
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app">
+      <h1>Code Runner</h1>
+      
+      <div className="controls">
+        <label>
+          Language:
+          <select 
+            value={language} 
+            onChange={(e) => setLanguage(e.target.value as Language)}
+          >
+            {Object.entries(LANGUAGES).map(([key, name]) => (
+              <option key={key} value={key}>{name}</option>
+            ))}
+          </select>
+        </label>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+
+      <div className="editor">
+        <textarea
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="Enter your code here..."
+          rows={15}
+          cols={80}
+        />
+      </div>
+
+      <div className="run-section">
+        <button 
+          onClick={runCode} 
+          disabled={isRunning || !code.trim()}
+          className="run-button"
+        >
+          {isRunning ? 'Running...' : 'Run Code'}
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+
+      <div className="output">
+        <h3>Output:</h3>
+        <pre className="output-content">{output}</pre>
+      </div>
+    </div>
   )
 }
 
