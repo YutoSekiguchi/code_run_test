@@ -14,6 +14,12 @@ def run_sample(sample, deps=None):
 def test_python_sample():
     out, rc = run_sample('samples/hello.py')
     assert rc == 0
+def test_pandas_stub():
+    out, rc = run_sample('samples/use_pandas.py')
+    assert rc == 0
+    assert out == '3'
+
+
     assert out == 'Hello from Python'
 
 

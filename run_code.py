@@ -14,11 +14,11 @@ LANG_RUNNERS = {
 
 COMPILED_LANGUAGES = {
     '.c': {
-        'compile': ['gcc', '{src}', '-o', '{out}'],
+        'compile': ['gcc', '{src}', '-o', '{out}', '-lm'],
         'run': ['{out}']
     },
     '.cpp': {
-        'compile': ['g++', '{src}', '-o', '{out}'],
+        'compile': ['g++', '{src}', '-o', '{out}', '-lm'],
         'run': ['{out}']
     },
     '.java': {
@@ -28,6 +28,9 @@ COMPILED_LANGUAGES = {
 }
 
 
+        if ext == '.py':
+            stub = os.path.join(os.path.dirname(__file__), 'libs', 'pandas_stub')
+            env['PYTHONPATH'] = os.pathsep.join(filter(None, [stub, env.get('PYTHONPATH', '')]))
 def run_command(cmd, env=None, cwd=None):
     result = subprocess.run(cmd, text=True, capture_output=True, env=env, cwd=cwd)
 
