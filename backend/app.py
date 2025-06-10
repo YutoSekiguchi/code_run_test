@@ -42,12 +42,12 @@ def run_code(lang, code, deps=''):
         if dep_list:
             args += ['--deps'] + dep_list
         
-        print(f"DEBUG: args={args}")
-        print(f"DEBUG: code={code}")
+        logging.debug(f"args={args}")
+        logging.debug(f"code={code}")
         result = subprocess.run(args, text=True, capture_output=True)
-        print(f"DEBUG: returncode={result.returncode}")
-        print(f"DEBUG: stdout={result.stdout}")
-        print(f"DEBUG: stderr={result.stderr}")
+        logging.debug(f"returncode={result.returncode}")
+        logging.debug(f"stdout={result.stdout}")
+        logging.debug(f"stderr={result.stderr}")
         return result.stdout + result.stderr
 
 
