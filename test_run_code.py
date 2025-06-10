@@ -2,6 +2,7 @@ import subprocess
 import sys
 
 
+
 def run_sample(sample, deps=None):
     cmd = [sys.executable, 'run_code.py', sample]
     if deps:
@@ -14,6 +15,7 @@ def test_python_sample():
     out, rc = run_sample('samples/hello.py')
     assert rc == 0
     assert out == 'Hello from Python'
+
 
 
 def run_node(lang, code, deps=''):
@@ -32,6 +34,7 @@ def test_web_python():
     assert 'OK' in out
 
 
+
 def test_python_with_dep():
     out, rc = run_sample('samples/use_local.py', ['libs/localpkg'])
     assert rc == 0
@@ -48,3 +51,4 @@ def test_wsgi_python():
     from app import run_code as wsgi_run
     out = wsgi_run('python', "print('WSGI')")
     assert 'WSGI' in out
+

@@ -27,12 +27,15 @@ COMPILED_LANGUAGES = {
     }
 }
 
+
 def run_command(cmd, env=None, cwd=None):
     result = subprocess.run(cmd, text=True, capture_output=True, env=env, cwd=cwd)
+
     print(result.stdout, end='')
     if result.stderr:
         print(result.stderr, file=sys.stderr)
     return result.returncode
+
 
 def install_dependencies(ext, deps, depdir):
     env = {}
@@ -100,6 +103,7 @@ def main():
 
     try:
         rc = run_script(args.source, args.deps)
+
         sys.exit(rc)
     except ValueError as exc:
         print(exc)
