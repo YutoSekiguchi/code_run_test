@@ -1,9 +1,12 @@
 import os
 import tempfile
 import subprocess
+import logging
 from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = FastAPI()
 
@@ -26,16 +29,26 @@ LANGUAGE_EXT = {
     'java': '.java'
 }
 
+MAIN_FILE_NAMES = {
+    '.py': 'main.py',
+    '.js': 'main.js',
+    '.rb': 'main.rb',
+    '.java': 'Main.java',
+    '.c': 'main.c',
+    '.cpp': 'main.cpp'
+}
+
 
 def run_code(lang, code, deps=''):
     ext = LANGUAGE_EXT.get(lang)
     if not ext:
         return f'Unsupported language: {lang}'
     with tempfile.TemporaryDirectory() as tmpdir:
-        path = os.path.join(tmpdir, 'prog' + ext)
+        main_file = MAIN_FILE_NAMES.get(ext, 'prog' + ext)
+        path = os.path.join(tmpdir, main_file)
         with open(path, 'w') as f:
             f.write(code)
-        run_code_path = os.path.join(os.path.dirname(__file__), 'run_code.py')
+        run_code_path = os.path.join(os.path.dirname(__file__), 'engines', 'run_code_docker.py')
         import sys
         args = [sys.executable, run_code_path, path]
         dep_list = deps.strip().split()
