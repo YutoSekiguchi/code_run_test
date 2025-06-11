@@ -29,13 +29,23 @@ LANGUAGE_EXT = {
     'java': '.java'
 }
 
+MAIN_FILE_NAMES = {
+    '.py': 'main.py',
+    '.js': 'main.js',
+    '.rb': 'main.rb',
+    '.java': 'Main.java',
+    '.c': 'main.c',
+    '.cpp': 'main.cpp'
+}
+
 
 def run_code(lang, code, deps=''):
     ext = LANGUAGE_EXT.get(lang)
     if not ext:
         return f'Unsupported language: {lang}'
     with tempfile.TemporaryDirectory() as tmpdir:
-        path = os.path.join(tmpdir, 'prog' + ext)
+        main_file = MAIN_FILE_NAMES.get(ext, 'prog' + ext)
+        path = os.path.join(tmpdir, main_file)
         with open(path, 'w') as f:
             f.write(code)
         run_code_path = os.path.join(os.path.dirname(__file__), 'engines', 'run_code_docker.py')

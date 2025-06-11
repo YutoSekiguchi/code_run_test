@@ -6,65 +6,129 @@ import shutil
 import docker
 from pathlib import Path
 
-# Language to Dockerfile mapping
-LANGUAGE_DOCKERFILES = {
-    '.py': 'Dockerfile.python',
-    '.js': 'Dockerfile.javascript', 
-    '.java': 'Dockerfile.java',
-    '.cpp': 'Dockerfile.cpp',
-    '.c': 'Dockerfile.c',
-    '.rb': 'Dockerfile.ruby',
+# Language configurations with base image tags
+LANGUAGE_CONFIGS = {
+    '.py': {
+        'base_image': 'code-runner-python-base',
+        'main_file': 'main.py',
+        'dockerfile': 'Dockerfile.python'
+    },
+    '.js': {
+        'base_image': 'code-runner-js-base',
+        'main_file': 'main.js', 
+        'dockerfile': 'Dockerfile.javascript'
+    },
+    '.rb': {
+        'base_image': 'code-runner-ruby-base',
+        'main_file': 'main.rb',
+        'dockerfile': 'Dockerfile.ruby'
+    },
+    '.java': {
+        'base_image': 'code-runner-java-base',
+        'main_file': 'Main.java',
+        'dockerfile': 'Dockerfile.java'
+    },
+    '.c': {
+        'base_image': 'code-runner-c-base',
+        'main_file': 'main.c',
+        'dockerfile': 'Dockerfile.c'
+    },
+    '.cpp': {
+        'base_image': 'code-runner-cpp-base',
+        'main_file': 'main.cpp',
+        'dockerfile': 'Dockerfile.cpp'
+    }
 }
 
-# Language to main file name mapping
-MAIN_FILE_NAMES = {
-    '.py': 'main.py',
-    '.js': 'main.js',
-    '.java': 'Main.java',
-    '.cpp': 'main.cpp',
-    '.c': 'main.c',
-    '.rb': 'main.rb',
-}
+
+def ensure_base_image_exists(client, ext):
+    """Ensure the base image for the language exists, build if necessary."""
+    config = LANGUAGE_CONFIGS[ext]
+    base_image = config['base_image']
+    
+    try:
+        # Check if base image exists
+        client.images.get(base_image)
+        return True
+    except docker.errors.ImageNotFound:
+        print(f"Base image {base_image} not found. Building...")
+        
+        # Build base image
+        script_dir = Path(__file__).parent.parent
+        dockerfiles_dir = script_dir / 'dockerfiles'
+        dockerfile_path = dockerfiles_dir / config['dockerfile']
+        
+        if not dockerfile_path.exists():
+            raise FileNotFoundError(f"Dockerfile not found: {dockerfile_path}")
+        
+        try:
+            image, build_logs = client.images.build(
+                path=str(dockerfiles_dir),
+                dockerfile=config['dockerfile'],
+                tag=base_image,
+                rm=True,
+                forcerm=True
+            )
+            print(f"Successfully built base image: {base_image}")
+            return True
+        except Exception as e:
+            print(f"Failed to build base image: {e}")
+            return False
 
 
 def run_code_in_docker(source_path, deps=None):
-    """Run code in Docker container"""
+    """Run code in Docker container using pre-built base images."""
     deps = deps or []
     ext = os.path.splitext(source_path)[1]
     
-    if ext not in LANGUAGE_DOCKERFILES:
+    if ext not in LANGUAGE_CONFIGS:
         raise ValueError(f"Unsupported file extension: {ext}")
     
     client = docker.from_env()
-    dockerfile_path = os.path.join(os.path.dirname(__file__), 'dockerfiles', LANGUAGE_DOCKERFILES[ext])
+    config = LANGUAGE_CONFIGS[ext]
     
-    if not os.path.exists(dockerfile_path):
-        raise FileNotFoundError(f"Dockerfile not found: {dockerfile_path}")
+    # Ensure base image exists
+    if not ensure_base_image_exists(client, ext):
+        raise RuntimeError(f"Failed to ensure base image for {ext}")
     
-    # Create temporary directory for build context
-    with tempfile.TemporaryDirectory() as build_context:
-        # Copy source file to main file name
-        main_file = MAIN_FILE_NAMES[ext]
-        shutil.copy2(source_path, os.path.join(build_context, main_file))
+    # Create temporary directory for code execution
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Copy source file to temp directory with expected name
+        main_file = config['main_file']
+        temp_code_path = os.path.join(temp_dir, main_file)
+        shutil.copy2(source_path, temp_code_path)
         
-        # Copy dockerfile to build context
-        shutil.copy2(dockerfile_path, os.path.join(build_context, 'Dockerfile'))
+        # Debug: list files in temp directory
+        print(f"Debug: temp_dir contents: {os.listdir(temp_dir)}")
+        print(f"Debug: source_path: {source_path}")
+        print(f"Debug: main_file: {main_file}")
+        print(f"Debug: temp_code_path: {temp_code_path}")
         
-        # Handle dependencies
+        # Handle dependencies if provided
         if deps and ext == '.py':
             # Create requirements.txt for Python dependencies
-            with open(os.path.join(build_context, 'requirements.txt'), 'w') as f:
+            requirements_path = os.path.join(temp_dir, 'requirements.txt')
+            with open(requirements_path, 'w') as f:
                 for dep in deps:
                     if not os.path.exists(dep):  # Only add non-local dependencies
                         f.write(f"{dep}\n")
             
-            # Update Dockerfile to install requirements
-            with open(os.path.join(build_context, 'Dockerfile'), 'a') as f:
-                f.write("\nCOPY requirements.txt .\n")
-                f.write("RUN pip install -r requirements.txt\n")
+            # Install dependencies in container before running code
+            if os.path.getsize(requirements_path) > 0:
+                try:
+                    # Run pip install in temporary container
+                    client.containers.run(
+                        config['base_image'],
+                        f"pip install -r /app/requirements.txt",
+                        volumes={temp_dir: {'bind': '/app', 'mode': 'rw'}},
+                        working_dir='/app',
+                        remove=True
+                    )
+                except Exception as e:
+                    print(f"Warning: Failed to install dependencies: {e}")
         
         elif deps and ext == '.js':
-            # Create package.json for Node.js dependencies
+            # Handle Node.js dependencies
             package_json = {
                 "name": "code-runner",
                 "version": "1.0.0",
@@ -76,34 +140,51 @@ def run_code_in_docker(source_path, deps=None):
             
             if package_json["dependencies"]:
                 import json
-                with open(os.path.join(build_context, 'package.json'), 'w') as f:
+                package_path = os.path.join(temp_dir, 'package.json')
+                with open(package_path, 'w') as f:
                     json.dump(package_json, f, indent=2)
                 
-                # Update Dockerfile to install packages
-                with open(os.path.join(build_context, 'Dockerfile'), 'a') as f:
-                    f.write("\nCOPY package.json .\n")
-                    f.write("RUN npm install\n")
+                try:
+                    # Run npm install in temporary container
+                    client.containers.run(
+                        config['base_image'],
+                        "npm install",
+                        volumes={temp_dir: {'bind': '/app', 'mode': 'rw'}},
+                        working_dir='/app',
+                        remove=True
+                    )
+                except Exception as e:
+                    print(f"Warning: Failed to install dependencies: {e}")
         
         try:
-            # Build image
-            image_tag = f"code-runner-{ext[1:]}"
-            print(f"Building Docker image for {ext} code...")
-            image, build_logs = client.images.build(
-                path=build_context,
-                tag=image_tag,
-                rm=True,
-                forcerm=True
-            )
+            # Determine the command to run based on language
+            if ext == '.py':
+                cmd = f"python {main_file}"
+            elif ext == '.js':
+                cmd = f"node {main_file}"
+            elif ext == '.rb':
+                cmd = f"ruby {main_file}"
+            elif ext == '.java':
+                cmd = f"javac {main_file} && java Main"
+            elif ext == '.c':
+                cmd = f"gcc -o main {main_file} -lm && ./main"
+            elif ext == '.cpp':
+                cmd = f"g++ -o main {main_file} && ./main"
+            else:
+                cmd = f"echo 'Unsupported language: {ext}'"
             
-            # Run container
+            # Run container with volume mount (should work now with /tmp mounted)
             print(f"Running {ext} code in container...")
             container = client.containers.run(
-                image_tag,
+                config['base_image'],
+                cmd,
+                volumes={temp_dir: {'bind': '/app', 'mode': 'ro'}},
+                working_dir='/app',
                 remove=True,
                 stdout=True,
                 stderr=True,
-                mem_limit="128m",  # Memory limit
-                network_disabled=True  # Disable network access
+                mem_limit="128m",
+                network_disabled=True
             )
             
             # Print output
@@ -124,12 +205,6 @@ def run_code_in_docker(source_path, deps=None):
         except Exception as e:
             print(f"Unexpected error: {e}", file=sys.stderr)
             return 1
-        finally:
-            # Clean up image
-            try:
-                client.images.remove(image_tag, force=True)
-            except:
-                pass
 
 
 def main():
