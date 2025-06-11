@@ -1,9 +1,12 @@
 import os
 import tempfile
 import subprocess
+import logging
 from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import PlainTextResponse
+
+logging.basicConfig(level=logging.DEBUG)
 
 app = FastAPI()
 
@@ -35,7 +38,7 @@ def run_code(lang, code, deps=''):
         path = os.path.join(tmpdir, 'prog' + ext)
         with open(path, 'w') as f:
             f.write(code)
-        run_code_path = os.path.join(os.path.dirname(__file__), 'run_code.py')
+        run_code_path = os.path.join(os.path.dirname(__file__), 'engines', 'run_code_docker.py')
         import sys
         args = [sys.executable, run_code_path, path]
         dep_list = deps.strip().split()

@@ -1,0 +1,12 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install pip packages in container
+RUN pip install --no-cache-dir pip --upgrade
+
+# Copy and run user code
+COPY . .
+RUN chmod +x /app/*
+
+CMD ["python", "main.py"]

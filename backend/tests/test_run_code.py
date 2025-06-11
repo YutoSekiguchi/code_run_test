@@ -4,7 +4,7 @@ import sys
 
 
 def run_sample(sample, deps=None):
-    cmd = [sys.executable, 'run_code.py', sample]
+    cmd = [sys.executable, '../engines/run_code.py', sample]
     if deps:
         cmd += ['--deps'] + deps
     result = subprocess.run(cmd, text=True, capture_output=True)
@@ -12,7 +12,7 @@ def run_sample(sample, deps=None):
 
 
 def test_python_sample():
-    out, rc = run_sample('samples/hello.py')
+    out, rc = run_sample('../samples/hello.py')
     assert rc == 0
     assert out == 'Hello from Python'
 
@@ -35,24 +35,26 @@ def test_web_python():
 
 
 def test_python_with_dep():
-    out, rc = run_sample('samples/use_local.py', ['libs/localpkg'])
+    out, rc = run_sample('../samples/use_local.py', ['../libs/localpkg'])
     assert rc == 0
     assert out == '42'
 
 
 def test_pandas_stub():
-    out, rc = run_sample('samples/use_pandas.py')
+    out, rc = run_sample('../samples/use_pandas.py')
     assert rc == 0
     assert out == '3'
 
 
 def test_node_with_dep():
-    out, rc = run_node('javascript', "const rev=require('stringer');console.log(rev('abc'));", 'libs/stringer')
+    out, rc = run_node('javascript', "const rev=require('stringer');console.log(rev('abc'));", '../libs/stringer')
     assert rc == 0
     assert 'cba' in out
 
 
 def test_wsgi_python():
+    import sys
+    sys.path.append('..')
     from app import run_code as wsgi_run
     out = wsgi_run('python', "print('WSGI')")
     assert 'WSGI' in out
