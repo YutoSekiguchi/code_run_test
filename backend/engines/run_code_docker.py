@@ -86,7 +86,8 @@ def run_code_in_docker(source_path, deps=None):
         
         try:
             # Build image
-            image_tag = f"code-runner-{ext[1:]}"
+            unique_id = uuid.uuid4().hex
+            image_tag = f"code-runner-{ext[1:]}-{unique_id}"
             print(f"Building Docker image for {ext} code...")
             image, build_logs = client.images.build(
                 path=build_context,
