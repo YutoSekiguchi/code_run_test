@@ -51,7 +51,6 @@ def ensure_base_image_exists(client, ext):
         client.images.get(base_image)
         return True
     except docker.errors.ImageNotFound:
-        print(f"Base image {base_image} not found. Building...")
         
         # Build base image
         script_dir = Path(__file__).parent.parent
@@ -69,7 +68,6 @@ def ensure_base_image_exists(client, ext):
                 rm=True,
                 forcerm=True
             )
-            print(f"Successfully built base image: {base_image}")
             return True
         except Exception as e:
             print(f"Failed to build base image: {e}")
@@ -98,11 +96,6 @@ def run_code_in_docker(source_path, deps=None):
         temp_code_path = os.path.join(temp_dir, main_file)
         shutil.copy2(source_path, temp_code_path)
         
-        # Debug: list files in temp directory
-        print(f"Debug: temp_dir contents: {os.listdir(temp_dir)}")
-        print(f"Debug: source_path: {source_path}")
-        print(f"Debug: main_file: {main_file}")
-        print(f"Debug: temp_code_path: {temp_code_path}")
         
         # Handle dependencies if provided
         if deps and ext == '.py':
@@ -173,8 +166,7 @@ def run_code_in_docker(source_path, deps=None):
             else:
                 cmd = f"echo 'Unsupported language: {ext}'"
             
-            # Run container with volume mount (should work now with /tmp mounted)
-            print(f"Running {ext} code in container...")
+            # Run container with volume mount
             container = client.containers.run(
                 config['base_image'],
                 cmd,
