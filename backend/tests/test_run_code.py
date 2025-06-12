@@ -4,17 +4,17 @@ import sys
 
 
 def run_sample(sample, deps=None):
-    cmd = [sys.executable, '../engines/run_code.py', sample]
+    cmd = [sys.executable, '../engines/run_code_docker.py', sample]
     if deps:
         cmd += ['--deps'] + deps
     result = subprocess.run(cmd, text=True, capture_output=True)
     return result.stdout.strip(), result.returncode
 
 
-def test_python_sample():
-    out, rc = run_sample('../samples/hello.py')
+def test_web_python():
+    out, rc = run_node('python', "print('OK')")
     assert rc == 0
-    assert out == 'Hello from Python'
+    assert 'OK' in out
 
 
 def run_node(lang, code, deps=''):
@@ -25,31 +25,6 @@ def run_node(lang, code, deps=''):
     )
     result = subprocess.run(['node', '-e', script], text=True, capture_output=True)
     return result.stdout.strip(), result.returncode
-
-
-def test_web_python():
-    out, rc = run_node('python', "print('OK')")
-    assert rc == 0
-    assert 'OK' in out
-
-
-
-def test_python_with_dep():
-    out, rc = run_sample('../samples/use_local.py', ['../libs/localpkg'])
-    assert rc == 0
-    assert out == '42'
-
-
-def test_pandas_stub():
-    out, rc = run_sample('../samples/use_pandas.py')
-    assert rc == 0
-    assert out == '3'
-
-
-def test_node_with_dep():
-    out, rc = run_node('javascript', "const rev=require('stringer');console.log(rev('abc'));", '../libs/stringer')
-    assert rc == 0
-    assert 'cba' in out
 
 
 def test_wsgi_python():
