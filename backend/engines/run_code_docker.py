@@ -92,7 +92,11 @@ def run_code_in_docker(source_path, deps=None):
     # Create temporary directory for code execution
     with tempfile.TemporaryDirectory() as temp_dir:
         # Copy source file to temp directory with expected name
-        main_file = config['main_file']
+        if ext == '.java':
+            # For Java, preserve original filename for class name matching
+            main_file = os.path.basename(source_path)
+        else:
+            main_file = config['main_file']
         temp_code_path = os.path.join(temp_dir, main_file)
         shutil.copy2(source_path, temp_code_path)
         
@@ -158,19 +162,22 @@ def run_code_in_docker(source_path, deps=None):
             elif ext == '.rb':
                 cmd = f"ruby {main_file}"
             elif ext == '.java':
-                cmd = f"javac {main_file} && java Main"
+                class_name = os.path.splitext(main_file)[0]
+                cmd = f"sh -c 'javac {main_file} && java {class_name}'"
             elif ext == '.c':
-                cmd = f"gcc -o main {main_file} -lm && ./main"
+                cmd = f"sh -c 'gcc -o main {main_file} -lm && ./main'"
             elif ext == '.cpp':
-                cmd = f"g++ -o main {main_file} && ./main"
+                cmd = f"sh -c 'g++ -o main {main_file} && ./main'"
             else:
                 cmd = f"echo 'Unsupported language: {ext}'"
             
             # Run container with volume mount
+            # Use read-write for compiled languages, read-only for interpreted
+            volume_mode = 'rw' if ext in ['.java', '.c', '.cpp'] else 'ro'
             container = client.containers.run(
                 config['base_image'],
                 cmd,
-                volumes={temp_dir: {'bind': '/app', 'mode': 'ro'}},
+                volumes={temp_dir: {'bind': '/app', 'mode': volume_mode}},
                 working_dir='/app',
                 remove=True,
                 stdout=True,
