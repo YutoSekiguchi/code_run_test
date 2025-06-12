@@ -37,6 +37,16 @@ LANGUAGE_CONFIGS = {
         'base_image': 'code-runner-cpp-base',
         'main_file': 'main.cpp',
         'dockerfile': 'Dockerfile.cpp'
+    },
+    '.php': {
+        'base_image': 'code-runner-php-base',
+        'main_file': 'main.php',
+        'dockerfile': 'Dockerfile.php'
+    },
+    '.cs': {
+        'base_image': 'code-runner-csharp-base',
+        'main_file': 'Program.cs',
+        'dockerfile': 'Dockerfile.csharp'
     }
 }
 
@@ -163,12 +173,16 @@ def run_code_in_docker(source_path, deps=None):
                 cmd = f"sh -c 'gcc -o main {main_file} -lm && ./main'"
             elif ext == '.cpp':
                 cmd = f"sh -c 'g++ -o main {main_file} && ./main'"
+            elif ext == '.php':
+                cmd = f"php {main_file}"
+            elif ext == '.cs':
+                cmd = f"sh -c 'mcs {main_file} -out:Program.exe && mono Program.exe'"
             else:
                 cmd = f"echo 'Unsupported language: {ext}'"
             
             # Run container with volume mount
             # Use read-write for compiled languages, read-only for interpreted
-            volume_mode = 'rw' if ext in ['.java', '.c', '.cpp'] else 'ro'
+            volume_mode = 'rw' if ext in ['.java', '.c', '.cpp', '.cs'] else 'ro'
             container = client.containers.run(
                 config['base_image'],
                 cmd,

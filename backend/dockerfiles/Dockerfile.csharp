@@ -1,0 +1,9 @@
+FROM mono:latest
+
+WORKDIR /app
+
+# Copy and run user code
+COPY . .
+RUN chmod +x /app/*
+
+CMD ["mono", "Program.exe"]

@@ -13,9 +13,11 @@ A multi-language code execution platform with a React frontend and FastAPI backe
 - Python (`.py`)
 - JavaScript (`.js`)
 - Ruby (`.rb`)
+- PHP (`.php`)
 - C (`.c`)
 - C++ (`.cpp`)
 - Java (`.java`)
+- C# (`.cs`)
 
 ## Getting Started
 
@@ -75,22 +77,16 @@ npm run dev
 
 You can run code directly from the command line using two execution modes:
 
-### Standard Execution
-```bash
-cd backend
-python run_code.py <path to source file>
-```
-
 ### Docker-based Execution (Secure)
 ```bash
 cd backend
-python run_code_docker.py <path to source file>
+python engines/run_code.py <path to source file>
 ```
 
 Examples:
 ```bash
-python run_code.py samples/hello.py
-python run_code_docker.py samples/hello.rb
+python engines/run_code.py templates/solution/solution.py
+python engines/run_code.py templates/fibonacci/fibonacci.js
 ```
 
 ### Installing dependencies
@@ -98,8 +94,8 @@ python run_code_docker.py samples/hello.rb
 Use the `--deps` option to specify packages to install before running:
 
 ```bash
-python run_code.py samples/use_local.py --deps libs/localpkg
-python run_code_docker.py samples/use_pandas.py --deps pandas
+python engines/run_code.py templates/solution/solution.py --deps pandas
+python engines/run_code.py templates/fibonacci/fibonacci.js --deps lodash
 ```
 
 The runner installs Python packages with `pip` and JavaScript packages with `npm`. Docker mode provides additional security isolation.
@@ -113,10 +109,11 @@ The runner exposes a stub of the `pandas` library without needing to install it.
 - `GET /` - API status
 - `POST /` - Execute code (form-data: language, code, deps)
 - `POST /run` - Alternative endpoint for code execution
+- `GET /template/{language}` - Get template code for a language
 
 ## Features
 
-- ✅ Multi-language support (Python, JavaScript, Ruby, C, C++, Java)
+- ✅ Multi-language support (Python, JavaScript, Ruby, PHP, C, C++, Java, C#)
 - ✅ React frontend with modern UI
 - ✅ FastAPI backend with CORS support
 - ✅ Docker-based secure code execution
@@ -126,6 +123,36 @@ The runner exposes a stub of the `pandas` library without needing to install it.
 - ✅ Real-time code execution
 - ✅ Error handling and output display
 - ✅ Memory and network isolation in Docker mode
+- ✅ Template files for quick start and learning
+- ✅ Comprehensive Fibonacci implementations in all languages
+
+## Templates and Examples
+
+The project includes comprehensive template files for learning and experimentation:
+
+### Basic Templates (`backend/templates/solution/`)
+- `solution.py` - Python Hello World
+- `solution.js` - JavaScript Hello World
+- `solution.rb` - Ruby Hello World
+- `solution.php` - PHP Hello World
+- `solution.c` - C Hello World
+- `solution.cpp` - C++ Hello World
+- `solution.cs` - C# Hello World
+- `Solution.java` - Java Hello World
+
+### Advanced Examples (`backend/templates/fibonacci/`)
+Each language includes multiple implementations of the Fibonacci sequence:
+- **Recursive** with memoization
+- **Iterative** approaches
+- **Matrix exponentiation** for fast calculation
+- **Golden ratio** approximation
+- **Language-specific** features (generators, LINQ, etc.)
+
+These examples demonstrate:
+- Algorithm optimization techniques
+- Language-specific idioms and features
+- Performance comparison between approaches
+- Mathematical properties of the Fibonacci sequence
 
 ## Architecture
 

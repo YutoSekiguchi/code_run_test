@@ -8,7 +8,8 @@ const LANGUAGES = {
   php: 'PHP',
   c: 'C',
   cpp: 'C++',
-  java: 'Java'
+  java: 'Java',
+  csharp: 'C#'
 } as const;
 
 type Language = keyof typeof LANGUAGES;
