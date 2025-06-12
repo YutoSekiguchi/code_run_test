@@ -38,6 +38,15 @@ MAIN_FILE_NAMES = {
     '.cpp': 'main.cpp'
 }
 
+TEMPLATE_FILES = {
+    'python': 'solution.py',
+    'javascript': 'solution.js',
+    'ruby': 'solution.rb',
+    'java': 'Solution.java',
+    'c': 'solution.c',
+    'cpp': 'solution.cpp'
+}
+
 
 def run_code(lang, code, deps=''):
     ext = LANGUAGE_EXT.get(lang)
@@ -87,6 +96,24 @@ async def run_code_endpoint_alt(
 ):
     output = run_code(language, code, deps)
     return PlainTextResponse(output)
+
+
+@app.get("/template/{language}")
+async def get_template(language: str):
+    template_file = TEMPLATE_FILES.get(language)
+    if not template_file:
+        return PlainTextResponse(f"Template not found for language: {language}", status_code=404)
+    
+    template_path = os.path.join(os.path.dirname(__file__), 'templates', 'solution', template_file)
+    
+    try:
+        with open(template_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return PlainTextResponse(content)
+    except FileNotFoundError:
+        return PlainTextResponse(f"Template file not found: {template_file}", status_code=404)
+    except Exception as e:
+        return PlainTextResponse(f"Error reading template: {str(e)}", status_code=500)
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Play, Save, Download, Upload, Settings, User, Code, Terminal } from 'lucide-react';
 
 const LANGUAGES = {
@@ -19,6 +19,27 @@ export default function App() {
   const [code, setCode] = useState('');
   const [output, setOutput] = useState('');
   const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    loadTemplate('python');
+  }, []);
+
+  const loadTemplate = async (selectedLanguage: Language) => {
+    try {
+      const response = await fetch(`http://localhost:8000/template/${selectedLanguage}`);
+      if (response.ok) {
+        const template = await response.text();
+        setCode(template);
+      }
+    } catch (error) {
+      console.error('Failed to load template:', error);
+    }
+  };
+
+  const handleLanguageChange = (newLanguage: Language) => {
+    setLanguage(newLanguage);
+    loadTemplate(newLanguage);
+  };
 
   const runCode = async () => {
     setIsRunning(true);
@@ -82,7 +103,7 @@ export default function App() {
               <label className="text-sm text-gray-600">言語選択:</label>
               <select
                 value={language}
-                onChange={(e) => setLanguage(e.target.value as Language)}
+                onChange={(e) => handleLanguageChange(e.target.value as Language)}
                 className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {Object.entries(LANGUAGES).map(([key, name]) => (
