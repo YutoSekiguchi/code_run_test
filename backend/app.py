@@ -48,7 +48,7 @@ def run_code(lang, code, deps=''):
         path = os.path.join(tmpdir, main_file)
         with open(path, 'w') as f:
             f.write(code)
-        run_code_path = os.path.join(os.path.dirname(__file__), 'engines', 'run_code_docker.py')
+        run_code_path = os.path.join(os.path.dirname(__file__), 'engines', 'run_code.py')
         import sys
         args = [sys.executable, run_code_path, path]
         dep_list = deps.strip().split()
