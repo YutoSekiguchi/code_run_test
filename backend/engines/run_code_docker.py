@@ -25,7 +25,7 @@ LANGUAGE_CONFIGS = {
     },
     '.java': {
         'base_image': 'code-runner-java-base',
-        'main_file': 'Main.java',
+        'main_file': 'Solution.java',
         'dockerfile': 'Dockerfile.java'
     },
     '.c': {
@@ -61,7 +61,7 @@ def ensure_base_image_exists(client, ext):
             raise FileNotFoundError(f"Dockerfile not found: {dockerfile_path}")
         
         try:
-            image, build_logs = client.images.build(
+            client.images.build(
                 path=str(dockerfiles_dir),
                 dockerfile=config['dockerfile'],
                 tag=base_image,
@@ -92,11 +92,7 @@ def run_code_in_docker(source_path, deps=None):
     # Create temporary directory for code execution
     with tempfile.TemporaryDirectory() as temp_dir:
         # Copy source file to temp directory with expected name
-        if ext == '.java':
-            # For Java, preserve original filename for class name matching
-            main_file = os.path.basename(source_path)
-        else:
-            main_file = config['main_file']
+        main_file = config['main_file']
         temp_code_path = os.path.join(temp_dir, main_file)
         shutil.copy2(source_path, temp_code_path)
         
@@ -162,8 +158,7 @@ def run_code_in_docker(source_path, deps=None):
             elif ext == '.rb':
                 cmd = f"ruby {main_file}"
             elif ext == '.java':
-                class_name = os.path.splitext(main_file)[0]
-                cmd = f"sh -c 'javac {main_file} && java {class_name}'"
+                cmd = f"sh -c 'javac {main_file} && java Solution'"
             elif ext == '.c':
                 cmd = f"sh -c 'gcc -o main {main_file} -lm && ./main'"
             elif ext == '.cpp':
