@@ -25,7 +25,7 @@ LANGUAGE_CONFIGS = {
     },
     '.java': {
         'base_image': 'code-runner-java-base',
-        'main_file': 'Main.java',
+        'main_file': 'Solution.java',
         'dockerfile': 'Dockerfile.java'
     },
     '.c': {
@@ -61,7 +61,7 @@ def ensure_base_image_exists(client, ext):
             raise FileNotFoundError(f"Dockerfile not found: {dockerfile_path}")
         
         try:
-            image, build_logs = client.images.build(
+            client.images.build(
                 path=str(dockerfiles_dir),
                 dockerfile=config['dockerfile'],
                 tag=base_image,
@@ -158,19 +158,21 @@ def run_code_in_docker(source_path, deps=None):
             elif ext == '.rb':
                 cmd = f"ruby {main_file}"
             elif ext == '.java':
-                cmd = f"javac {main_file} && java Main"
+                cmd = f"sh -c 'javac {main_file} && java Solution'"
             elif ext == '.c':
-                cmd = f"gcc -o main {main_file} -lm && ./main"
+                cmd = f"sh -c 'gcc -o main {main_file} -lm && ./main'"
             elif ext == '.cpp':
-                cmd = f"g++ -o main {main_file} && ./main"
+                cmd = f"sh -c 'g++ -o main {main_file} && ./main'"
             else:
                 cmd = f"echo 'Unsupported language: {ext}'"
             
             # Run container with volume mount
+            # Use read-write for compiled languages, read-only for interpreted
+            volume_mode = 'rw' if ext in ['.java', '.c', '.cpp'] else 'ro'
             container = client.containers.run(
                 config['base_image'],
                 cmd,
-                volumes={temp_dir: {'bind': '/app', 'mode': 'ro'}},
+                volumes={temp_dir: {'bind': '/app', 'mode': volume_mode}},
                 working_dir='/app',
                 remove=True,
                 stdout=True,

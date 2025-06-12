@@ -10,7 +10,7 @@ This is a code execution platform with a React frontend and Python FastAPI backe
 
 ### Backend (`/backend`)
 - FastAPI server (`app.py`)
-- Code execution engine (`run_code.py`)
+- Code execution engine (`engines/run_code.py`)
 - Multi-language support with sample files
 - Local package libraries for testing
 
@@ -36,9 +36,14 @@ All files have been modified as part of the recent refactoring:
 - C/C++
 - Ruby
 
-## Recent Changes
-- UI design improvements
-- FastAPI server implementation
-- ASGI interface removal
-- Frontend/backend separation
-- Directory restructuring
+## Development Philosophy
+
+### Test-Driven Development (TDD)
+- Proceed with Test-Driven Development (TDD) as a principle
+- Create tests first based on expected inputs and outputs
+- Do not write implementation code, only prepare tests
+- Run tests and confirm failures
+- Commit once you have confirmed that the tests are correct
+- Then proceed with implementation to make the tests pass
+- Do not modify tests during implementation, keep modifying the code
+- Repeat until all tests pass
