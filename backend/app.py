@@ -23,28 +23,32 @@ LANGUAGE_EXT = {
     'javascript': '.js',
     'ruby': '.rb',
     'php': '.php',
-    'perl': '.pl',
     'c': '.c',
     'cpp': '.cpp',
-    'java': '.java'
+    'java': '.java',
+    'csharp': '.cs'
 }
 
 MAIN_FILE_NAMES = {
     '.py': 'main.py',
     '.js': 'main.js',
     '.rb': 'main.rb',
+    '.php': 'main.php',
     '.java': 'Main.java',
     '.c': 'main.c',
-    '.cpp': 'main.cpp'
+    '.cpp': 'main.cpp',
+    '.cs': 'Program.cs'
 }
 
 TEMPLATE_FILES = {
     'python': 'solution.py',
     'javascript': 'solution.js',
     'ruby': 'solution.rb',
+    'php': 'solution.php',
     'java': 'Solution.java',
     'c': 'solution.c',
-    'cpp': 'solution.cpp'
+    'cpp': 'solution.cpp',
+    'csharp': 'solution.cs'
 }
 
 

@@ -6,10 +6,10 @@ const LANGUAGES = {
   javascript: 'JavaScript',
   ruby: 'Ruby',
   php: 'PHP',
-  perl: 'Perl',
   c: 'C',
   cpp: 'C++',
-  java: 'Java'
+  java: 'Java',
+  csharp: 'C#'
 } as const;
 
 type Language = keyof typeof LANGUAGES;
