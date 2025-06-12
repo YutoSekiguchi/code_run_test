@@ -23,7 +23,6 @@ LANGUAGE_EXT = {
     'javascript': '.js',
     'ruby': '.rb',
     'php': '.php',
-    'perl': '.pl',
     'c': '.c',
     'cpp': '.cpp',
     'java': '.java'

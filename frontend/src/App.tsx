@@ -6,7 +6,6 @@ const LANGUAGES = {
   javascript: 'JavaScript',
   ruby: 'Ruby',
   php: 'PHP',
-  perl: 'Perl',
   c: 'C',
   cpp: 'C++',
   java: 'Java'
