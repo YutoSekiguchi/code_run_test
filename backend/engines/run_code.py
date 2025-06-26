@@ -47,6 +47,11 @@ LANGUAGE_CONFIGS = {
         'base_image': 'code-runner-csharp-base',
         'main_file': 'Program.cs',
         'dockerfile': 'Dockerfile.csharp'
+    },
+    '.wasm': {
+        'base_image': 'code-runner-wasm-base',
+        'main_file': 'main.cpp',
+        'dockerfile': 'Dockerfile.wasm'
     }
 }
 
@@ -84,6 +89,81 @@ def ensure_base_image_exists(client, ext):
             return False
 
 
+def run_wasm_code(source_path, deps=None):
+    """Run WebAssembly code compilation and return HTML/WASM files."""
+    deps = deps or []
+    client = docker.from_env()
+    config = LANGUAGE_CONFIGS['.wasm']
+    
+    # Ensure base image exists
+    if not ensure_base_image_exists(client, '.wasm'):
+        raise RuntimeError("Failed to ensure base image for WebAssembly")
+    
+    # Create temporary directory for code execution
+    with tempfile.TemporaryDirectory() as temp_dir:
+        # Copy source file to temp directory with expected name
+        main_file = config['main_file']
+        temp_code_path = os.path.join(temp_dir, main_file)
+        shutil.copy2(source_path, temp_code_path)
+        
+        try:
+            # Compile to WebAssembly without custom shell
+            cmd = f"sh -c 'em++ {main_file} -s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -o main.html'"
+            
+            container = client.containers.run(
+                config['base_image'],
+                cmd,
+                volumes={temp_dir: {'bind': '/app', 'mode': 'rw'}},
+                working_dir='/app',
+                remove=True,
+                stdout=True,
+                stderr=True,
+                mem_limit="512m",
+                network_disabled=True
+            )
+            
+            # Check if compilation was successful
+            html_path = os.path.join(temp_dir, 'main.html')
+            wasm_path = os.path.join(temp_dir, 'main.wasm')
+            js_path = os.path.join(temp_dir, 'main.js')
+            
+            if os.path.exists(html_path) and os.path.exists(wasm_path) and os.path.exists(js_path):
+                # Read compiled files
+                with open(html_path, 'r') as f:
+                    html_content = f.read()
+                with open(wasm_path, 'rb') as f:
+                    wasm_content = f.read()
+                with open(js_path, 'r') as f:
+                    js_content = f.read()
+                
+                return {
+                    'success': True,
+                    'html': html_content,
+                    'wasm': wasm_content,
+                    'js': js_content,
+                    'output': container.decode('utf-8')
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Compilation failed - output files not generated',
+                    'output': container.decode('utf-8')
+                }
+                
+        except docker.errors.ContainerError as e:
+            return {
+                'success': False,
+                'error': f"Container error: {e.stderr.decode('utf-8')}",
+                'output': ''
+            }
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f"Unexpected error: {e}",
+                'output': ''
+            }
+
+
 def run_code_in_docker(source_path, deps=None):
     """Run code in Docker container using pre-built base images."""
     deps = deps or []
@@ -91,6 +171,10 @@ def run_code_in_docker(source_path, deps=None):
     
     if ext not in LANGUAGE_CONFIGS:
         raise ValueError(f"Unsupported file extension: {ext}")
+    
+    # Handle WebAssembly compilation separately
+    if ext == '.wasm':
+        return run_wasm_code(source_path, deps)
     
     client = docker.from_env()
     config = LANGUAGE_CONFIGS[ext]
@@ -177,12 +261,14 @@ def run_code_in_docker(source_path, deps=None):
                 cmd = f"php {main_file}"
             elif ext == '.cs':
                 cmd = f"sh -c 'mcs {main_file} -out:Program.exe && mono Program.exe'"
+            elif ext == '.wasm':
+                cmd = f"sh -c 'em++ {main_file} -s USE_SDL=2 -s WASM=1 -s ALLOW_MEMORY_GROWTH=1 -o main.html'"
             else:
                 cmd = f"echo 'Unsupported language: {ext}'"
             
             # Run container with volume mount
             # Use read-write for compiled languages, read-only for interpreted
-            volume_mode = 'rw' if ext in ['.java', '.c', '.cpp', '.cs'] else 'ro'
+            volume_mode = 'rw' if ext in ['.java', '.c', '.cpp', '.cs', '.wasm'] else 'ro'
             container = client.containers.run(
                 config['base_image'],
                 cmd,

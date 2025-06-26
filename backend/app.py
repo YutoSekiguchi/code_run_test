@@ -2,9 +2,10 @@ import os
 import tempfile
 import subprocess
 import logging
+import base64
 from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, JSONResponse
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -26,7 +27,8 @@ LANGUAGE_EXT = {
     'c': '.c',
     'cpp': '.cpp',
     'java': '.java',
-    'csharp': '.cs'
+    'csharp': '.cs',
+    'wasm': '.wasm'
 }
 
 MAIN_FILE_NAMES = {
@@ -37,7 +39,8 @@ MAIN_FILE_NAMES = {
     '.java': 'Main.java',
     '.c': 'main.c',
     '.cpp': 'main.cpp',
-    '.cs': 'Program.cs'
+    '.cs': 'Program.cs',
+    '.wasm': 'main.cpp'
 }
 
 TEMPLATE_FILES = {
@@ -48,7 +51,8 @@ TEMPLATE_FILES = {
     'java': 'Solution.java',
     'c': 'solution.c',
     'cpp': 'solution.cpp',
-    'csharp': 'solution.cs'
+    'csharp': 'solution.cs',
+    'wasm': 'solution_wasm.cpp'
 }
 
 
@@ -56,6 +60,11 @@ def run_code(lang, code, deps=''):
     ext = LANGUAGE_EXT.get(lang)
     if not ext:
         return f'Unsupported language: {lang}'
+    
+    # Handle WebAssembly compilation differently
+    if lang == 'wasm':
+        return run_wasm(code, deps)
+    
     with tempfile.TemporaryDirectory() as tmpdir:
         main_file = MAIN_FILE_NAMES.get(ext, 'prog' + ext)
         path = os.path.join(tmpdir, main_file)
@@ -75,6 +84,26 @@ def run_code(lang, code, deps=''):
         logging.debug(f"stdout={result.stdout}")
         logging.debug(f"stderr={result.stderr}")
         return result.stdout + result.stderr
+
+
+def run_wasm(code, deps=''):
+    """Handle WebAssembly compilation and return compiled files."""
+    from engines.run_code import run_wasm_code
+    
+    with tempfile.TemporaryDirectory() as tmpdir:
+        path = os.path.join(tmpdir, 'main.cpp')
+        with open(path, 'w') as f:
+            f.write(code)
+        
+        try:
+            result = run_wasm_code(path, deps.strip().split() if deps else [])
+            return result
+        except Exception as e:
+            return {
+                'success': False,
+                'error': str(e),
+                'output': ''
+            }
 
 
 @app.get("/")
@@ -99,6 +128,22 @@ async def run_code_endpoint_alt(
     deps: str = Form(default="")
 ):
     output = run_code(language, code, deps)
+    if language == 'wasm' and isinstance(output, dict):
+        if output['success']:
+            # Return WASM compilation result as JSON
+            return JSONResponse({
+                'success': True,
+                'html': output['html'],
+                'js': output['js'],
+                'wasm': base64.b64encode(output['wasm']).decode('utf-8'),
+                'output': output['output']
+            })
+        else:
+            return JSONResponse({
+                'success': False,
+                'error': output['error'],
+                'output': output['output']
+            })
     return PlainTextResponse(output)
 
 
